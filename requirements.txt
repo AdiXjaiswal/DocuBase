@@ -3,3 +3,7 @@ langchain-core
 langchain-community
 pymupdf
 ipykernel
+tqdm
+langchain-text-splitters 
+sentence-transformers #huggingface model
+chromadb # for vector database
