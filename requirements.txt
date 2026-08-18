@@ -7,3 +7,6 @@ tqdm
 langchain-text-splitters 
 sentence-transformers #huggingface model
 chromadb # for vector database
+openai  # direct OpenAI API client for NVIDIA NIM
+langchain-openai  # for NVIDIA Nemotron via OpenAI-compatible API
+python-dotenv  # for environment variable management
