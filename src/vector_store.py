@@ -6,15 +6,13 @@ import chromadb
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-from src.embeddings import EmbeddingPipeline
-from src.data_loader import load_all_docs
-
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+from embeddings import EmbeddingPipeline
+from data_loader import load_all_docs
 
 class ChromadbStore:
     def __init__(
         self,
-        persist_dir: str = str(PROJECT_ROOT / "data" / "vector_store"),
+        persist_dir: str = str("../data/vector_store"),
         collection_name: str = "test_collection",
         embedding_model: str = "all-MiniLM-L6-v2",
         chunk_size: int = 1000,
@@ -130,11 +128,11 @@ class ChromadbStore:
         print(f"[INFO] Cleared Chroma collection '{self.collection_name}'.")
 
 if __name__ == "__main__":
-    docs = load_all_docs(PROJECT_ROOT / "data")
-    store = ChromadbStore(PROJECT_ROOT / "data" / "vector_store")
-    store.build_from_documents(docs)
+    # docs = load_all_docs("../data")
+    store = ChromadbStore("../data/vector_store")
+    # store.build_from_documents(docs)
     store.load()
-    print(store.query("What is Regresion?", top_k=3))
+    print(store.query("What is Decision Tree?", top_k=6))
     
     # files = [x for x in Path("../data").iterdir() if x.is_file()]
     # print(files)
