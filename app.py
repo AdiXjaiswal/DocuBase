@@ -1,7 +1,5 @@
-from src.data_loader import load_all_docs
-from src.embeddings import EmbeddingPipeline
-from src.vector_store import ChromadbStore
-# from src.
+from src import load_all_docs
+from src import EmbeddingPipeline, ChromadbStore, SearchPipeline
 
 if __name__ == "__main__":
     data_dir="data"
@@ -9,4 +7,11 @@ if __name__ == "__main__":
     store=ChromadbStore()
     # store.build_from_documents(all_docs)
     store.load()
-    print(store.query("What is Decision Tree", top_k=6))
+    # print(store.query("What is Decision Tree", top_k=6))
+    search=SearchPipeline()
+    answer = search.rag_simple(
+            "What is a Multilayer Perceptron?",
+            rag_retriever=store,
+            top_k=6,
+        )
+    print(f"Answer:\n{answer}")
