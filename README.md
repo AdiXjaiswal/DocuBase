@@ -143,14 +143,17 @@ python app.py
 ```
 
 ---
+## Changes in current version (v0.1.1)
+### 1. Duplicate Content Prevention
+- **Source Grouping & File Hashing**: In build_from_documents, documents are grouped by metadata["source"]. A SHA-256 hash is computed for the combined text content of each source file.
+- **Deletion of Modified Chunks**: When a file is modified, its existing chunks are identified and deleted from Chroma before adding the newly split chunks. This ensures no old orphaned chunks remain in the vector store.
+- **Incremental Skipping**: If a source file's content hash matches the stored hash in the collection, the file is skipped completely, saving compute and embedding model calls.
+- **Purging Deleted Files**: Any source files present in Chroma that are no longer present in the incoming documents list are purged from the vector store.
+- **Deterministic Chunk IDs & Upsert**: Replaced random uuid4() IDs with content-based SHA-256 hashes and used self.collection.upsert().
 
 ## 🔮 Future Scope & Roadmap
 
-### 1. Duplicate Content Prevention
-- **SHA-256 / MD5 Hash Ingestion Filtering**: Implement content-hash deduplication in `ChromadbStore` to generate deterministic chunk IDs (`doc_<hash>`).
-- **Skip Existing Embeddings**: Check ChromaDB for existing chunk hashes before calling embedding models, saving computational overhead and preventing redundant vector entries.
-
-### 2. Web Application Interface
+### Web Application Interface
 - **Interactive UI**: Develop a web application (e.g., Streamlit / FastAPI + web interface) for seamless user interaction:
   - Drag-and-drop document upload and batch ingestion.
   - Interactive Q&A chat interface with expandable source citations.

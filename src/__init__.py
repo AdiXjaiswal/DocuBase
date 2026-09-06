@@ -8,7 +8,7 @@ from src.embeddings import EmbeddingPipeline
 from src.vector_store import ChromadbStore
 from src.search import SearchPipeline
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
     "load_all_docs",

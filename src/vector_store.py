@@ -1,3 +1,4 @@
+import hashlib
 from pathlib import Path
 from typing import Any, List, Optional
 from uuid import uuid4
@@ -33,25 +34,90 @@ class ChromadbStore:
         print(f"Using Chroma collection '{self.collection_name}' with {self.collection.count()} documents")
 
     def build_from_documents(self, documents: List[Any]):
-        print(f"Building vector store from {len(documents)} raw documents...")
+        print(f"Building/updating vector store from {len(documents)} raw documents...")
+
+        # 1. Group raw documents by source file
+        docs_by_source = {}
+        for doc in documents:
+            source = doc.metadata.get("source", "unknown")
+            if source not in docs_by_source:
+                docs_by_source[source] = []
+            docs_by_source[source].append(doc)
+
+        current_sources = set(docs_by_source.keys())
+
+        # 2. Purge files that were deleted from the source directory
+        all_stored = self.collection.get(include=["metadatas"])
+        stored_sources = set()
+        if all_stored and all_stored.get("metadatas"):
+            stored_sources = {
+                meta.get("source")
+                for meta in all_stored["metadatas"]
+                if meta and "source" in meta
+            }
+
+        deleted_sources = stored_sources - current_sources
+        for source in deleted_sources:
+            if source != "unknown":
+                print(f"Purging deleted file '{source}' from vector store...")
+                self.collection.delete(where={"source": source})
+
+        # 3. Check for modified or new files
+        sources_to_index = []
+        for source, source_docs in docs_by_source.items():
+            combined_text = "".join(doc.page_content for doc in source_docs)
+            file_hash = hashlib.sha256(combined_text.encode("utf-8")).hexdigest()
+
+            existing = self.collection.get(
+                where={"source": source},
+                limit=1,
+                include=["metadatas"]
+            )
+
+            if existing and existing.get("metadatas"):
+                existing_hash = existing["metadatas"][0].get("file_hash")
+                if existing_hash == file_hash:
+                    print(f"Skipping '{source}' (unchanged, hash matches).")
+                    continue
+                else:
+                    print(f"File modified. Clearing old chunks for '{source}'...")
+                    self.collection.delete(where={"source": source})
+            else:
+                print(f"New file detected: '{source}'")
+
+            for doc in source_docs:
+                doc.metadata["file_hash"] = file_hash
+
+            sources_to_index.extend(source_docs)
+
+        if not sources_to_index:
+            print("All documents are up-to-date. No modifications detected.")
+            return
+
+        # 4. Chunk and embed only new/modified documents
         emb_pipe = EmbeddingPipeline(
             model_name=self.embedding_model,
             chunk_size=self.chunk_size,
             chunk_overlap=self.chunk_overlap,
         )
-        chunks = emb_pipe.chunk_documents(documents)
+        chunks = emb_pipe.chunk_documents(sources_to_index)
         embeddings = emb_pipe.gen_embeddings(chunks)
         metadatas = [dict(chunk.metadata) for chunk in chunks]
-        self.add_embeddings(embeddings, metadatas, [chunk.page_content for chunk in chunks])
-        print(f"Vector store built and saved to {self.persist_dir}")
+        documents_text = [chunk.page_content for chunk in chunks]
+
+        # Generate deterministic IDs based on chunk content hash
+        ids = [hashlib.sha256(text.encode("utf-8")).hexdigest() for text in documents_text]
+
+        self.add_embeddings(embeddings, metadatas, documents_text, ids=ids)
+        print(f"Vector store update completed and saved to {self.persist_dir}")
 
     def add_embeddings(
         self,
         embeddings: np.ndarray,
         metadatas: Optional[List[dict]] = None,
         documents: Optional[List[str]] = None,
+        ids: Optional[List[str]] = None,
     ):
-        # embeddings = np.asarray(embeddings, dtype="float32")
         if embeddings.ndim != 2:
             raise ValueError("embeddings must be a two-dimensional array")
 
@@ -65,13 +131,16 @@ class ChromadbStore:
         if len(documents) != count:
             raise ValueError("Number of documents must match embeddings")
 
-        self.collection.add(
-            ids=[f"doc_{uuid4().hex}" for _ in range(count)],
+        if ids is None:
+            ids = [hashlib.sha256(doc.encode("utf-8")).hexdigest() for doc in documents]
+
+        self.collection.upsert(
+            ids=ids,
             embeddings=embeddings.tolist(),
             metadatas=metadatas,
             documents=documents,
         )
-        print(f"[INFO] Added {count} vectors to Chroma collection.")
+        print(f"[INFO] Upserted {count} vectors to Chroma collection.")
 
     def load(self):
         self.client = chromadb.PersistentClient(path=self.persist_dir)
