@@ -3,7 +3,7 @@ from typing import Any, Optional
 
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
-from vector_store import ChromadbStore
+from .vector_store import ChromadbStore
 
 load_dotenv()
 

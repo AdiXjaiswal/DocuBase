@@ -161,6 +161,89 @@ python app.py
 
 ---
 
+## Some test runs with outputs
+1. Loading Documents in vector store and querying the RAG pipeline
+
+```
+Loaded: data\Machine_Learning_Unit_1.pdf
+Loaded: data\Machine_Learning_Unit_2.pdf
+Loaded: data\Machine_Learning_Unit_3.pdf
+Loaded: data\Machine_Learning_Unit_4.pdf
+Loaded: data\Machine_Learning_Unit_5.pdf
+
+Total documents loaded: 164
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights: 100%|███████████████████████████████████████████████████████████████████| 103/103 [00:00<00:00, 3865.06it/s]
+Loaded embedding model: all-MiniLM-L6-v2
+Using Chroma collection 'test_collection' with 0 documents
+Building/updating vector store from 164 raw documents...
+New file detected: 'data\Machine_Learning_Unit_1.pdf'
+New file detected: 'data\Machine_Learning_Unit_2.pdf'
+New file detected: 'data\Machine_Learning_Unit_3.pdf'
+New file detected: 'data\Machine_Learning_Unit_4.pdf'
+New file detected: 'data\Machine_Learning_Unit_5.pdf'
+Loading weights: 100%|███████████████████████████████████████████████████████████████████| 103/103 [00:00<00:00, 4666.28it/s]
+
+Loaded model: all-MiniLM-L6-v2
+Split 164 documents into 267 chunks
+
+Generating embeddings for 267 texts.
+Batches: 100%|█████████████████████████████████████████████████████████████████████████████████| 9/9 [00:35<00:00,  3.99s/it]
+Generated embeddings with shape: (267, 384)
+[INFO] Upserted 267 vectors to Chroma collection.
+Vector store update completed and saved to J:\data\vector_store
+[INFO] Loaded 267 documents from Chroma.
+Enter your query or type 'exit' to quit: what are the types of machine learning
+[INFO] Querying vector store for: 'what are the types of machine learning'
+Answer:
+Based on the provided document context, there are mainly three types of machine learning [Source 1]:
+
+1. **Supervised Learning**
+2. **Unsupervised Learning**
+3. **Reinforcement Learning**
+Enter your query or type 'exit' to quit: what is decision tree and what type of machine learning it is
+[INFO] Querying vector store for: 'what is decision tree and what type of machine learning it is'
+Answer:
+Based on the provided document context:
+
+**What is a Decision Tree?**
+Decision Trees are models widely used for **classification and regression tasks** due to their interpretability and simplicity [Source 1]. They are constructed by recursively splitting data based on attributes (e.g., using entropy or information gain) 
+until all instances are classified or no attributes remain [Source 1, Source 4].
+
+**What type of machine learning is it?**
+The document lists three main types of machine learning: **Supervised Learning, Unsupervised Learning, and Reinforcement Learning** [Source 3]. Since Decision Trees are explicitly used for **classification and regression** [Source 1]—which are hallmark tasks of **Supervised Learning**—they fall under the Supervised Learning category.
+Enter your query or type 'exit' to quit: exit
+```
+
+2. Trying to load duplicate documents and asking questions outside of the document
+
+```
+Loaded: data\Machine_Learning_Unit_1.pdf
+Loaded: data\Machine_Learning_Unit_2.pdf
+Loaded: data\Machine_Learning_Unit_3.pdf
+Loaded: data\Machine_Learning_Unit_4.pdf
+Loaded: data\Machine_Learning_Unit_5.pdf
+
+Total documents loaded: 164
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights: 100%|█████████████████████████████████████████████████████████████████████████████████████████████| 103/103 [00:00<00:00, 1713.16it/s]
+Loaded embedding model: all-MiniLM-L6-v2
+Using Chroma collection 'test_collection' with 267 documents
+Building/updating vector store from 164 raw documents...
+Skipping 'data\Machine_Learning_Unit_1.pdf' (unchanged, hash matches).
+Skipping 'data\Machine_Learning_Unit_2.pdf' (unchanged, hash matches).
+Skipping 'data\Machine_Learning_Unit_3.pdf' (unchanged, hash matches).
+Skipping 'data\Machine_Learning_Unit_4.pdf' (unchanged, hash matches).
+Skipping 'data\Machine_Learning_Unit_5.pdf' (unchanged, hash matches).
+All documents are up-to-date. No modifications detected.
+[INFO] Loaded 267 documents from Chroma.
+Enter your query or type 'exit' to quit: Who is Albert
+[INFO] Querying vector store for: 'Who is Albert'
+Answer:
+I do not know. The provided document context does not mention anyone named Albert.
+Enter your query or type 'exit' to quit: exit
+```
+
 ## 📜 License
 
 This project is open-source under the MIT License.

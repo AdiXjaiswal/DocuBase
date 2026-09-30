@@ -7,8 +7,8 @@ import chromadb
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-from embeddings import EmbeddingPipeline
-from data_loader import load_all_docs
+from .embeddings import EmbeddingPipeline
+from .data_loader import load_all_docs
 
 class ChromadbStore:
     def __init__(
